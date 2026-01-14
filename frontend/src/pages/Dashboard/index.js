@@ -199,7 +199,7 @@ const useStyles = makeStyles((theme) => ({
 
 const InfoCard = ({ title, value, icon }) => {
   const classes = useStyles();
-  
+
   return (
     <Grid item xs={12} sm={6} md={3}>
       <Paper
@@ -271,12 +271,12 @@ const Dashboard = () => {
   );
   const [dateTo, setDateTo] = useState(moment().format("YYYY-MM-DDTHH") + ":59");
   const { getCurrentUserInfo } = useAuth();
-    
+
   const [supportPix, setSupportPix] = useState(false);
   const [supportIsBr, setSupportIsBr] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [proInstructionsOpen, setProInstructionsOpen] = useState(false);
-  
+
   const [usersOnlineTotal, setUsersOnlineTotal] = useState(0);
   const [usersOfflineTotal, setUsersOfflineTotal] = useState(0);
   const [usersStatusChartData, setUsersStatusChartData] = useState([]);
@@ -284,22 +284,22 @@ const Dashboard = () => {
   const [pendingChartData, setPendingChartData] = useState([]);
   const [openedTotal, setOpenedTotal] = useState(0);
   const [openedChartData, setOpenedChartData] = useState([]);
-  
+
   const [ticketsData, setTicketsData] = useState({});
   const [usersData, setUsersData] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const socketManager = useContext(SocketContext);
-    
+
   async function showProInstructions() {
     if (gitinfo.commitHash) {
       setProInstructionsOpen(true);
       return;
     }
-    
+
     window.open("https://pro.ticke.tz", "_blank");
   }
-  
+
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
@@ -310,10 +310,10 @@ const Dashboard = () => {
         }
       });
   }, []);
-  
+
   useEffect(() => {
     const socket = socketManager.GetSocket(companyId);
-    
+
     socket.on("userOnlineChange", updateStatus);
     socket.on("counter", updateStatus);
 
@@ -321,7 +321,7 @@ const Dashboard = () => {
       socket.disconnect();
     }
   }, [socketManager]);
-  
+
   useEffect(() => {
     getCurrentUserInfo().then(
       (user) => {
@@ -339,11 +339,11 @@ const Dashboard = () => {
 
     setRegistered( registry?.data?.disabled || !!(registry?.data?.whatsapp ) );
   }, []);
-    
+
   useEffect(() => {
     fetchData();
   }, [period]);
-  
+
   async function handleChangePeriod(value) {
     setPeriod(value);
   }
@@ -411,10 +411,10 @@ const Dashboard = () => {
       }
     ).catch(() => {});
   }
-  
+
   async function fetchData() {
     let params = { tz: getTimezoneOffset() };
-    
+
     const days = Number(period);
 
     if (days) {
@@ -530,12 +530,11 @@ const Dashboard = () => {
       </div>
     );
   }
-      
+
   return (
     <div>
       <Container maxWidth="lg" className={classes.container}>
         <Grid container spacing={3} justifyContent="flex-start">
-
           {/* USUARIOS ONLINE */}
           <InfoRingCard
             title={i18n.t("dashboard.usersOnline")}
@@ -623,5 +622,3 @@ const Dashboard = () => {
     </div>
   );
 };
-
-export default Dashboard;
