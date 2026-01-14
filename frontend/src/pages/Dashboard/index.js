@@ -25,7 +25,6 @@ import TableAttendantsStatus from "../../components/Dashboard/TableAttendantsSta
 import { isEmpty } from "lodash";
 import moment from "moment";
 import { i18n } from "../../translate/i18n";
-import OnlyForSuperUser from "../../components/OnlyForSuperUser";
 import useAuth from "../../hooks/useAuth.js";
 import clsx from "clsx";
 import { loadJSON } from "../../helpers/loadJSON";
@@ -33,14 +32,10 @@ import { loadJSON } from "../../helpers/loadJSON";
 import { SmallPie } from "./SmallPie";
 import { TicketCountersChart } from "./TicketCountersChart";
 import { getTimezoneOffset } from "../../helpers/getTimezoneOffset.js";
-
-import TicketzRegistry from "../../components/TicketzRegistry";
-import { copyToClipboard } from "../../helpers/copyToClipboard.js";
-import api from "../../services/api.js";
-import { SocketContext } from "../../context/Socket/SocketContext.js";
 import { formatTimeInterval } from "../../helpers/formatTimeInterval.js";
 
-const gitinfo = loadJSON('/gitinfo.json');
+import api from "../../services/api.js";
+import { SocketContext } from "../../context/Socket/SocketContext.js";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -54,42 +49,6 @@ const useStyles = makeStyles((theme) => ({
     height: 240,
     overflowY: "auto",
     ...theme.scrollbarStyles,
-  },
-  pixkey: {
-    fontSize: "9pt",
-  },
-  paymentimg: {
-    maxWidth: "75%",
-    marginTop: 10,
-  },
-  paymentpix: {
-    maxWidth: "100%",
-    maxHeight: 130,
-    padding: "5px",
-    backgroundColor: "white",
-    borderColor: "black",
-    borderStyle: "solid",
-    borderWidth: "2px",
-  },
-  supportPaper: {
-    padding: theme.spacing(2),
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "clip",
-    height: 300,
-    backgroundColor: theme.palette.secondary.main,
-    color: theme.palette.secondary.contrastText,
-    ...theme.scrollbarStyles,
-  },
-  supportBox: {
-    backgroundColor: theme.palette.secondary.light,
-    borderRadius: "10px",
-    textAlign: "center",
-    borderColor: theme.palette.secondary.main,
-    borderWidth: "3px",
-    borderStyle: "solid",
-    transition: "max-height 0.5s ease",
-    overflow: "clip"
   },
   cardAvatar: {
     fontSize: "55px",
@@ -150,56 +109,11 @@ const useStyles = makeStyles((theme) => ({
     position: "sticky",
     right: 0,
   },
-  ticketzProPaper: {
-    padding: theme.spacing(2),
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "auto",
-    minHeight: 300,
-    backgroundColor: theme.palette.ticketzproad.main,
-    color: theme.palette.ticketzproad.contrastText,
-    ...theme.scrollbarStyles,
-  },
-  ticketzRegistryPaper: {
-    padding: theme.spacing(2),
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "auto",
-    backgroundColor: theme.palette.background.main,
-    color: theme.palette.background.contrastText,
-    borderColor: theme.palette.primary.main,
-    borderWidth: "3px",
-    borderStyle: "solid",
-    marginBottom: "1em",
-    ...theme.scrollbarStyles,
-  },
-  ticketzProBox: {
-    textAlign: "center",
-    alignContent: "center"
-  },
-  ticketzProTitle: {
-    fontWeight: "bold"
-  },
-  ticketzProScreen: {
-    maxHeight: "300px",
-    maxWidth: "100%"
-  },
-  ticketzProFeatures: {
-    padding: 0,
-    listStyleType: "none"
-  },
-  ticketzProCommand: {
-    fontFamily: "monospace",
-    backgroundColor: "#00000080"
-  },
-  clickpointer: {
-    cursor: "pointer"
-  }
 }));
 
 const InfoCard = ({ title, value, icon }) => {
   const classes = useStyles();
-
+  
   return (
     <Grid item xs={12} sm={6} md={3}>
       <Paper
@@ -232,7 +146,7 @@ const InfoCard = ({ title, value, icon }) => {
 const InfoRingCard = ({ title, value, graph }) => {
   const classes = useStyles();
   return (
-    <Grid item xs={12} sm={4}>
+    <Grid item xs={12} sm={6} md={4}>
       <Paper
         className={classes.cardSolid}
         elevation={4}
@@ -272,11 +186,6 @@ const Dashboard = () => {
   const [dateTo, setDateTo] = useState(moment().format("YYYY-MM-DDTHH") + ":59");
   const { getCurrentUserInfo } = useAuth();
 
-  const [supportPix, setSupportPix] = useState(false);
-  const [supportIsBr, setSupportIsBr] = useState(false);
-  const [registered, setRegistered] = useState(false);
-  const [proInstructionsOpen, setProInstructionsOpen] = useState(false);
-
   const [usersOnlineTotal, setUsersOnlineTotal] = useState(0);
   const [usersOfflineTotal, setUsersOfflineTotal] = useState(0);
   const [usersStatusChartData, setUsersStatusChartData] = useState([]);
@@ -284,44 +193,13 @@ const Dashboard = () => {
   const [pendingChartData, setPendingChartData] = useState([]);
   const [openedTotal, setOpenedTotal] = useState(0);
   const [openedChartData, setOpenedChartData] = useState([]);
-
+  
   const [ticketsData, setTicketsData] = useState({});
   const [usersData, setUsersData] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const socketManager = useContext(SocketContext);
-
-  async function showProInstructions() {
-    if (gitinfo.commitHash) {
-      setProInstructionsOpen(true);
-      return;
-    }
-
-    window.open("https://pro.ticke.tz", "_blank");
-  }
-
-  useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => {
-        if (data.country === 'BR') {
-          setSupportPix(true);
-          setSupportIsBr(true);
-        }
-      });
-  }, []);
-
-  useEffect(() => {
-    const socket = socketManager.GetSocket(companyId);
-
-    socket.on("userOnlineChange", updateStatus);
-    socket.on("counter", updateStatus);
-
-    return () => {
-      socket.disconnect();
-    }
-  }, [socketManager]);
-
+    
   useEffect(() => {
     getCurrentUserInfo().then(
       (user) => {
@@ -334,16 +212,10 @@ const Dashboard = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(async () => {
-    const registry = await api.get("/ticketz/registry");
-
-    setRegistered( registry?.data?.disabled || !!(registry?.data?.whatsapp ) );
-  }, []);
-
   useEffect(() => {
     fetchData();
   }, [period]);
-
+  
   async function handleChangePeriod(value) {
     setPeriod(value);
   }
@@ -411,10 +283,10 @@ const Dashboard = () => {
       }
     ).catch(() => {});
   }
-
+  
   async function fetchData() {
     let params = { tz: getTimezoneOffset() };
-
+    
     const days = Number(period);
 
     if (days) {
@@ -464,9 +336,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     updateStatus();
-  }, [])
+  }, []);
 
   const companyId = localStorage.getItem("companyId");
+
+  useEffect(() => {
+    const socket = socketManager.GetSocket(companyId);
+    
+    socket.on("userOnlineChange", updateStatus);
+    socket.on("counter", updateStatus);
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [socketManager, companyId]);
 
   function renderFilters() {
       return (
@@ -525,16 +408,14 @@ const Dashboard = () => {
   }
 
   if (currentUser?.profile !== "admin") {
-    return (
-      <div>
-      </div>
-    );
+    return null;
   }
-
+      
   return (
     <div>
       <Container maxWidth="lg" className={classes.container}>
         <Grid container spacing={3} justifyContent="flex-start">
+
           {/* USUARIOS ONLINE */}
           <InfoRingCard
             title={i18n.t("dashboard.usersOnline")}
@@ -606,7 +487,6 @@ const Dashboard = () => {
             </Paper>
           </Grid>
 
-
           {/* USER REPORT */}
           <Grid item xs={12}>
             {usersData.userReport?.length ? (
@@ -622,3 +502,5 @@ const Dashboard = () => {
     </div>
   );
 };
+
+export default Dashboard;
